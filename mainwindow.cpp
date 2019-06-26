@@ -701,7 +701,8 @@ void MainWindow::on_ImportSymmKeyButton_clicked()
     {
         mSymmKey = (char*)(ui->textInput->toPlainText()).toStdString().c_str();
     }
-
+    // 对称秘钥成员变量
+    memcpy(tmpSymmkey,mSymmKey,strlen(mSymmKey));
 //    // 导出加密公钥
 //    ECCPUBLICKEYBLOB eccPubBlob = {0};
 //    DWORD dwEccPubBlobLen = sizeof(ECCPUBLICKEYBLOB);
@@ -1306,10 +1307,10 @@ void MainWindow::on_TEXT2SM4Button_clicked()
     //使用SM4算法对初始数据加密
     HANDLE hKey = nullptr;
     BLOCKCIPHERPARAM cipherParam = {0};
-    iRet = Dapi->SKF_SetSymmKey(phDev, (BYTE *) "1234567812345678", SGD_SM4_ECB, &hKey);
+    iRet = Dapi->SKF_SetSymmKey(phDev, (BYTE *)tmpSymmkey, SGD_SM4_ECB, &hKey);
     iRet = Dapi->SKF_EncryptInit(hKey, cipherParam);
     iRet = Dapi->SKF_Encrypt(hKey, ucSealData, unSealDataLen, bEncData, &dwEncDataLen);
-    qDebug()<<dwEncDataLen;
+    qDebug()<<"数据加密用对称秘钥："<<tmpSymmkey<<"::加密后数据长度::"<<dwEncDataLen;
     char ucB64DecodeData[4096*20] = {0};
     unsigned int ucB64DecodeDataLen = 4096*20;
     Base64Encode( bEncData, dwEncDataLen,ucB64DecodeData,&ucB64DecodeDataLen);

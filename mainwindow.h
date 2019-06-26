@@ -108,6 +108,7 @@ private:
     QString curItemName = nullptr;
     QString pinCode = nullptr;
     QString ContainerName = nullptr;
+    char tmpSymmkey[4096] = "1234567812345678";
 
 };
 
