@@ -709,8 +709,8 @@ void MainWindow::on_ImportSymmKeyButton_clicked()
     }
 
     // 使用加密公钥加密会话密钥
-    ECCCIPHERBLOB eccCipherBlob = {0};
-    iISRet = Dapi->SKF_ExtECCEncrypt(phDev, &eccPubBlob, (byte*)mSymmKey, strlen(mSymmKey), &eccCipherBlob);
+    BYTE eccCipherBlob[4096*20] = {0};
+    iISRet = Dapi->SKF_ExtECCEncrypt(phDev, &eccPubBlob, (byte*)mSymmKey, strlen(mSymmKey), (ECCCIPHERBLOB*)eccCipherBlob);
     if (iISRet != 0)
     {
         qDebug()<<"使用加密公钥加密会话密钥失败";
@@ -719,16 +719,17 @@ void MainWindow::on_ImportSymmKeyButton_clicked()
 
 //    qDebug()<<QByteArray(mSymmKey).toBase64();
     // 导入秘钥
-    iISRet = Dapi->EPS_ImportSymmKey(mhContainer, EPST_SKEY_IDX_AMK,eccCipherBlob.Cipher, /*eccCipherBlob.CipherLen*/sizeof (eccPubBlob), 0);
+    DWORD dwEncSessonLen = sizeof(ECCCIPHERBLOB);
+    iISRet = Dapi->EPS_ImportSymmKey(mhContainer, EPST_SKEY_IDX_AMK,eccCipherBlob,dwEncSessonLen, 0);
     if(iISRet)
     {
         qDebug()<<"导入秘钥出错"<<QString::number(iISRet,16);
-        qDebug()<<eccCipherBlob.Cipher<<endl<<eccCipherBlob.CipherLen;
+        qDebug()<<eccCipherBlob;
         ui->resultBrowser->setText("导入秘钥出错"+QString::number(iISRet,16));
         return;
     }
     ui->resultBrowser->setText("导入秘钥成功");
-    qDebug()<<eccCipherBlob.Cipher<<endl<<eccCipherBlob.CipherLen;
+    qDebug()<<eccCipherBlob<<endl<<dwEncSessonLen;
 }
 
 void MainWindow::on_WriteESealDataButton_clicked()
@@ -772,7 +773,7 @@ void MainWindow::on_WriteESealDataButton_clicked()
         }
         QTextStream inData(&inputFile);
         // 若读取的数据有乱码可尝试改变缓冲区编码
-        inData.setCodec("GBK");
+        inData.setCodec("UTF-8");
         qsInputText = inData.readAll();
         inputFile.close();
     }
@@ -787,10 +788,10 @@ void MainWindow::on_WriteESealDataButton_clicked()
     // 处理 base64编码 复选框选择
     if(ui->isBase64->isChecked() == true)
     {
-        QByteArray baseEncodeData = QByteArray::fromBase64(qsInputText.toLocal8Bit());
-        qDebug()<<"QByteArray数据 "<<tc->toUnicode(baseEncodeData);
-        /*std::string */stInputText = (tc->toUnicode(baseEncodeData)).toStdString();
-        qDebug()<<"String数据 "<<tc->toUnicode(baseEncodeData);
+        QByteArray baseEncodeData = QByteArray::fromBase64(qsInputText.toUtf8());
+        qDebug()<<"QByteArray数据 "<<baseEncodeData;
+        stInputText = baseEncodeData.toStdString();
+        qDebug()<<"String数据 "<<baseEncodeData;
         sealData = (char*)stInputText.c_str();
     }
     else
@@ -842,24 +843,25 @@ void MainWindow::on_WriteESealDataButton_clicked()
 //        return;
 //    }
 //    ui->resultBrowser->setText(QString("导入印章成功,印章大小:")+QString::number(tmpLen));
-    BYTE bEncData[4096*20] = {0};
-    DWORD dwEncDataLen = sizeof(bEncData);
-    BYTE bKey[4096] = "1234567812345678";
-    // 使用SM4算法对初始数据加密
-    HANDLE hKey = nullptr;
-    BLOCKCIPHERPARAM cipherParam = {0};
-    Dapi->SKF_SetSymmKey(phDev, bKey, SGD_SM4_ECB, &hKey);
-    Dapi->SKF_EncryptInit(hKey, cipherParam);
-    Dapi->SKF_Encrypt(hKey, (byte*)sealData, 4096, bEncData, &dwEncDataLen);
-    qDebug()<<"加密后长度："<<dwEncDataLen<<"||||"<<sizeof(bEncData);
-    iWERet = Dapi->EPS_WriteESealData(phApp,(BYTE*)bEncData, strlen((char*)bEncData), 0);
+//    BYTE bEncData[4096*20] = {0};
+//    DWORD dwEncDataLen = sizeof(bEncData);
+//    BYTE bKey[4096] = "1234567812345678";
+//    // 使用SM4算法对初始数据加密
+//    HANDLE hKey = nullptr;
+//    BLOCKCIPHERPARAM cipherParam = {0};
+//    Dapi->SKF_SetSymmKey(phDev, bKey, SGD_SM4_ECB, &hKey);
+//    Dapi->SKF_EncryptInit(hKey, cipherParam);
+//    Dapi->SKF_Encrypt(hKey, (byte*)sealData, 4096, bEncData, &dwEncDataLen);
+//    qDebug()<<"加密后长度："<<dwEncDataLen<<"||||"<<sizeof(bEncData);
+//    iWERet = Dapi->EPS_WriteESealData(phApp,(BYTE*)bEncData, strlen((char*)bEncData), 0);
+     iWERet = Dapi->EPS_WriteESealData(phApp,(BYTE*)sealData, strlen((char*)sealData), 0);
     if(iWERet)
     {
         qDebug()<<"导入印章出错"<<QString::number(iWERet,16);
         ui->resultBrowser->setText("导入印章出错"+QString::number(iWERet,16));
         return;
     }
-    ui->resultBrowser->setText(QString("导入印章成功,印章大小:")+QString::number(dwEncDataLen));
+    ui->resultBrowser->setText(QString("导入印章成功,印章大小:")+QString::number(strlen((char*)sealData)));
 }
 
 void MainWindow::on_exitUKey_clicked()
