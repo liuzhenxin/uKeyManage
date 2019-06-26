@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setTabEnabled(1,false);
     ui->tabWidget->setTabEnabled(2,false);
     ui->unlockPinButton->setEnabled(false);
+    ui->TEXT2SM4Button->setEnabled(false);
     // 起始key类型选择窗口
     chooseKeyD = new ChooseKeyDialog(this);
     chooseKeyD->exec();
@@ -327,6 +328,7 @@ void MainWindow::treeView_model()
     ui->ContainerBrowser->clear();
     ui->ImportSymmKeyButton->setEnabled(false);
     ui->WriteESealDataButton->setEnabled(false);
+    ui->TEXT2SM4Button->setEnabled(false);
     // 关闭应用
     if(phApp)
         Dapi->SKF_CloseApplication(phApp);
@@ -562,9 +564,11 @@ void MainWindow::on_ContainerList_itemClicked(QListWidgetItem *item)
     {
         ui->ImportSymmKeyButton->setEnabled(true);
         ui->WriteESealDataButton->setEnabled(true);
+        ui->TEXT2SM4Button->setEnabled(true);
     }else{
         ui->ImportSymmKeyButton->setEnabled(false);
         ui->WriteESealDataButton->setEnabled(false);
+        ui->TEXT2SM4Button->setEnabled(false);
     }
     char ucCertS[4096] = {0};
     ULONG ulCertLen = 4096;
@@ -690,7 +694,7 @@ void MainWindow::on_ImportSymmKeyButton_clicked()
     // 是否解base64（ 由复选框返回值决定 ）
     if(ui->isBase64->isChecked() == true)
     {
-        QByteArray baseEncodeData = QByteArray::fromBase64(ui->textInput->toPlainText().toLocal8Bit());
+        QByteArray baseEncodeData = QByteArray::fromBase64(ui->textInput->toPlainText().toUtf8());
         mSymmKey = (char*)baseEncodeData.toStdString().c_str();
     }
     else
@@ -698,26 +702,50 @@ void MainWindow::on_ImportSymmKeyButton_clicked()
         mSymmKey = (char*)(ui->textInput->toPlainText()).toStdString().c_str();
     }
 
-    // 导出加密公钥
-    ECCPUBLICKEYBLOB eccPubBlob = {0};
-    DWORD dwEccPubBlobLen = sizeof(ECCPUBLICKEYBLOB);
-    iISRet = Dapi->SKF_ExportPublicKey(mhContainer, FALSE, (BYTE *)&eccPubBlob, &dwEccPubBlobLen);
-    if (iISRet != 0)
+//    // 导出加密公钥
+//    ECCPUBLICKEYBLOB eccPubBlob = {0};
+//    DWORD dwEccPubBlobLen = sizeof(ECCPUBLICKEYBLOB);
+//    iISRet = Dapi->SKF_ExportPublicKey(mhContainer, FALSE, (BYTE *)&eccPubBlob, &dwEccPubBlobLen);
+//    if (iISRet != 0)
+//    {
+//        qDebug()<<"导出加密公钥失败";
+//        return;
+//    }
+
+//    // 使用加密公钥加密会话密钥
+//    BYTE eccCipherBlob[4096*20] = {0};
+//    iISRet = Dapi->SKF_ExtECCEncrypt(phDev, &eccPubBlob, (byte*)mSymmKey, strlen(mSymmKey), (ECCCIPHERBLOB*)eccCipherBlob);
+//    if (iISRet != 0)
+//    {
+//        qDebug()<<"使用加密公钥加密会话密钥失败";
+//        return;
+//    }
+
+////    qDebug()<<QByteArray(mSymmKey).toBase64();
+    ECCPUBLICKEYBLOB eccPubBlob = {0};															//
+    DWORD dwEccPubBlobLen = sizeof(ECCPUBLICKEYBLOB);											//
+    iISRet = Dapi->SKF_ExportPublicKey(mhContainer, FALSE, (BYTE *)&eccPubBlob, &dwEccPubBlobLen);	//
+    if (iISRet != 0)																				//
     {
-        qDebug()<<"导出加密公钥失败";
+        qDebug()<<"导入公钥出错"<<QString::number(iISRet,16);
+        qDebug()<<&eccPubBlob;
+        ui->resultBrowser->setText("导入公钥出错"+QString::number(iISRet,16));
         return;
     }
 
-    // 使用加密公钥加密会话密钥
+    //使用加密公钥加密会话密钥
+    BYTE bSesson[16] = {0};
+    memcpy(bSesson, mSymmKey, strlen(mSymmKey));
+    DWORD dwSessonLen = sizeof(bSesson);
     BYTE eccCipherBlob[4096*20] = {0};
-    iISRet = Dapi->SKF_ExtECCEncrypt(phDev, &eccPubBlob, (byte*)mSymmKey, strlen(mSymmKey), (ECCCIPHERBLOB*)eccCipherBlob);
+    iISRet = Dapi->SKF_ExtECCEncrypt(phDev, &eccPubBlob, bSesson, dwSessonLen, (ECCCIPHERBLOB*)eccCipherBlob);
     if (iISRet != 0)
     {
-        qDebug()<<"使用加密公钥加密会话密钥失败";
-        return;
+        qDebug()<<"秘钥加密出错"<<QString::number(iISRet,16);
+        qDebug()<<eccCipherBlob;
+        ui->resultBrowser->setText("秘钥加密出错"+QString::number(iISRet,16));
+        return;																				//
     }
-
-//    qDebug()<<QByteArray(mSymmKey).toBase64();
     // 导入秘钥
     DWORD dwEncSessonLen = sizeof(ECCCIPHERBLOB);
     iISRet = Dapi->EPS_ImportSymmKey(mhContainer, EPST_SKEY_IDX_AMK,eccCipherBlob,dwEncSessonLen, 0);
@@ -908,7 +936,7 @@ void MainWindow::on_ReadESealDataButton_clicked()
     ULONG sealDataLen = 4096*10;
 
     iRERet = Dapi->EPS_ReadESealData(phApp, EPST_SKEY_IDX_AMK, SGD_SM4_ECB, (BYTE*)sealData, &sealDataLen, 0);
-    qDebug()<<"读取印章:"<<tc->toUnicode(sealData);
+    qDebug()<<"读取印章:"<<sealData;
     if(iRERet)
     {
         qDebug()<<"导出印章出错"<<QString::number(iRERet,16);
@@ -918,7 +946,7 @@ void MainWindow::on_ReadESealDataButton_clicked()
     if(ui->isBase64->isChecked() == true)
     {
 //       ui->resultBrowser->setText(tc->toUnicode(QString(sealData).toLocal8Bit().toBase64()));
-        ui->resultBrowser->setText(tc->toUnicode(QString::fromStdString(sealData).toLocal8Bit().toBase64()));
+        ui->resultBrowser->setText(QString::fromStdString(sealData).toUtf8().toBase64());
     }
     else
     {
@@ -1245,3 +1273,131 @@ void MainWindow::on_base64Encode_clicked()
 
     ui->base64TextEdit->setText((base64Text.toLocal8Bit()).toBase64());
 }
+
+void MainWindow::on_TEXT2SM4Button_clicked()
+{
+    unsigned long iRet = 0;
+    QString qsInputText = "";
+    if(ui->SM4WithFile2File->isChecked() == true)
+    {
+        QString inputFileName = QFileDialog::getOpenFileName(this,tr(""),"",tr("文本(*.txt)"));  // 选择路径
+        qDebug()<<"选择文件路径为:"<<inputFileName;
+        QFile inputFile(inputFileName);     // 打开文件
+        if(!inputFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this,"Warnning","打开失败!",QMessageBox::Yes);
+        }
+        QTextStream inData(&inputFile);
+        // 若读取的数据有乱码可尝试改变缓冲区编码
+        inData.setCodec("UTF-8");
+        qsInputText = inData.readAll();
+        inputFile.close();
+    }else{
+        qsInputText = ui->TEXT2SM4->toPlainText();
+    }
+
+    unsigned char* ucSealData = (unsigned char*)qsInputText.toStdString().c_str();
+    unsigned int unSealDataLen = strlen(qsInputText.toStdString().c_str());
+
+    qDebug()<<qsInputText.toStdString().c_str()<<"::"<<unSealDataLen;
+    BYTE bEncData[4096*20] = {0};
+    DWORD dwEncDataLen = sizeof(bEncData);
+
+    //使用SM4算法对初始数据加密
+    HANDLE hKey = nullptr;
+    BLOCKCIPHERPARAM cipherParam = {0};
+    iRet = Dapi->SKF_SetSymmKey(phDev, (BYTE *) "1234567812345678", SGD_SM4_ECB, &hKey);
+    iRet = Dapi->SKF_EncryptInit(hKey, cipherParam);
+    iRet = Dapi->SKF_Encrypt(hKey, ucSealData, unSealDataLen, bEncData, &dwEncDataLen);
+    qDebug()<<dwEncDataLen;
+    char ucB64DecodeData[4096*20] = {0};
+    unsigned int ucB64DecodeDataLen = 4096*20;
+    Base64Encode( bEncData, dwEncDataLen,ucB64DecodeData,&ucB64DecodeDataLen);
+    QString outData(ucB64DecodeData);
+    qDebug()<<outData<<"::"<<dwEncDataLen;
+    ui->SM4Text->setText(outData);
+}
+
+static char base64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+int MainWindow::Base64Encode(unsigned char* bin_data, int bin_size, char* base64_data, unsigned int* base64_size)
+{
+    long            i, j, k;
+    long            blk_size, remain_size;
+    unsigned char* p;
+    unsigned char   left[3];
+    int             i64;
+
+    blk_size = bin_size / 3;
+    remain_size = bin_size % 3;
+    p = bin_data;
+    j = 0;
+    i64 = 0;
+
+    for (i = 0; i < blk_size; i++)
+    {
+        k = (p[0] & 0xFC) >> 2;
+        base64_data[j++] = base64_table[k];
+
+        k = ((p[0] & 0x03) << 4) | (p[1] >> 4);
+        base64_data[j++] = base64_table[k];
+
+        k = ((p[1] & 0x0F) << 2) | (p[2] >> 6);
+        base64_data[j++] = base64_table[k];
+
+        k = p[2] & 0x3F;
+        base64_data[j++] = base64_table[k];
+
+        i64++;
+        i64++;
+        i64++;
+        i64++;
+
+        p += 3;
+    }
+
+    switch (remain_size)
+    {
+    case 0:
+        break;
+
+    case 1:
+        left[0] = p[0];
+        left[1] = 0;
+        p = left;
+
+        k = (p[0] & 0xFC) >> 2;
+        base64_data[j++] = base64_table[k];
+        k = ((p[0] & 0x03) << 4) | (p[1] >> 4);
+        base64_data[j++] = base64_table[k];
+
+        base64_data[j++] = '=';
+        base64_data[j++] = '=';
+        break;
+
+    case 2:
+        left[0] = p[0];
+        left[1] = p[1];
+        left[2] = 0;
+        p = left;
+
+        k = (p[0] & 0xFC) >> 2;
+        base64_data[j++] = base64_table[k];
+        k = ((p[0] & 0x03) << 4) | (p[1] >> 4);
+        base64_data[j++] = base64_table[k];
+        k = ((p[1] & 0x0F) << 2) | (p[2] >> 6);
+        base64_data[j++] = base64_table[k];
+        base64_data[j++] = '=';
+        break;
+
+    default:
+        break;
+    }
+
+    base64_data[j] = 0;
+    *base64_size = j;
+
+    return 0;
+}
+
+
+

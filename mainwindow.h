@@ -78,11 +78,14 @@ private slots:
     void on_base64Encode_clicked();
 
     void ShowContextMenu(const QPoint& pos);
+    void on_TEXT2SM4Button_clicked();
+
 private:
     void changeDll();
     void treeView_model();
     void connectDev(char*);
     QString getFormatCertText(char*,ULONG);
+    int Base64Encode(unsigned char* bin_data, int bin_size, char* base64_data, unsigned int* base64_size);
 private:
     Ui::MainWindow *ui = nullptr;
 
