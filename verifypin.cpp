@@ -70,7 +70,11 @@ int VerifyPin::verifyPIN(HAPPLICATION phApp)
         qDebug()<<"pin码锁死，请解锁";
         this->setWindowTitle("pin码锁死，请解锁");
         this->ui->okButton->setEnabled(false);
-        return 0;
+        this->ui->exitButton->setEnabled(false);
+        islocked = true;
+//        return 0;
+        Sleep(3);
+        this->~VerifyPin();
     }
     if(midRet == 0x0A000024)
     {
@@ -90,6 +94,7 @@ int VerifyPin::verifyPIN(HAPPLICATION phApp)
         return 0;
     }
     qDebug()<<"pin码正确"<<QString::number(midRet,16);
+    islocked = false;
     return 1;
 }
 

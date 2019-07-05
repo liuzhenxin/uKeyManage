@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>542</width>
-    <height>421</height>
+    <width>692</width>
+    <height>521</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -61,6 +61,11 @@
                   <string>龙脉</string>
                  </property>
                 </item>
+                <item>
+                 <property name="text">
+                  <string>飞天</string>
+                 </property>
+                </item>
                </widget>
               </item>
               <item>
@@ -88,16 +93,9 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
-               <widget class="QPushButton" name="deleteButton">
+               <widget class="QPushButton" name="unlockPinButton">
                 <property name="text">
-                 <string>删除</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="exitUKey">
-                <property name="text">
-                 <string>拔出ukey</string>
+                 <string>解锁pin</string>
                 </property>
                </widget>
               </item>
@@ -107,34 +105,6 @@
           </item>
           <item>
            <widget class="QTextEdit" name="TBItemInfo"/>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="ContainerManage">
-       <attribute name="title">
-        <string>容器</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="3,7">
-          <item>
-           <layout class="QVBoxLayout" name="verticalLayout_4">
-            <item>
-             <widget class="QListWidget" name="ContainerList"/>
-            </item>
-            <item>
-             <widget class="QPushButton" name="unlockPinButton">
-              <property name="text">
-               <string>pin解锁</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QTextEdit" name="ContainerBrowser"/>
           </item>
          </layout>
         </item>

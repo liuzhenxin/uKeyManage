@@ -30,3 +30,10 @@ void ChooseKeyDialog::on_LONGMAICHOOSE_toggled(bool checked)
         KEYNAMEFORCHOOSEDLL = LONGMAI;
     qDebug()<<"this is longmai has be choosed ："<<KEYNAMEFORCHOOSEDLL;
 }
+
+void ChooseKeyDialog::on_FEITIANCHOOSE_toggled(bool checked)
+{
+    if (checked)
+        KEYNAMEFORCHOOSEDLL = FEITIAN;
+    qDebug() << "this is feitian has be choosed ：" << KEYNAMEFORCHOOSEDLL;
+}

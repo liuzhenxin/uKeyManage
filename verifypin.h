@@ -15,7 +15,7 @@ class VerifyPin : public QDialog
 {
     Q_OBJECT
 signals:
-//    void pinMsg(QString);
+
 public:
     explicit VerifyPin(QWidget *parent = nullptr);
     ~VerifyPin();
@@ -37,7 +37,7 @@ public:
     QString dllName = nullptr;
     QString pinCode = nullptr;
     bool isExit = false;
-
+    bool islocked = false;
     HAPPLICATION phApp = nullptr;
 };
 

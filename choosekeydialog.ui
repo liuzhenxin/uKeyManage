@@ -30,10 +30,13 @@
    </property>
   </widget>
   <widget class="QRadioButton" name="LONGMAICHOOSE">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>60</y>
+     <y>40</y>
      <width>91</width>
      <height>18</height>
     </rect>
@@ -49,7 +52,7 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>60</y>
+     <y>40</y>
      <width>91</width>
      <height>18</height>
     </rect>
@@ -59,6 +62,22 @@
    </property>
    <property name="checked">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="FEITIANCHOOSE">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>90</y>
+     <width>91</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>飞天</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>
