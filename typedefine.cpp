@@ -72,12 +72,15 @@ typeDefApi::typeDefApi(QString DLLNAME)
     SKF_ReadFile = (PFN_SKF_ReadFile)SKFAPI.resolve("SKF_ReadFile");
     SKF_WriteFile = (PFN_SKF_WriteFile)SKFAPI.resolve("SKF_WriteFile");
 
-    EPS_ImportSymmKey = (PFN_EPS_ImportSymmKey)SKFAPI.resolve("EPS_ImportSymmKey");
-    EPS_WriteESealData = (PFN_EPS_WriteESealData)SKFAPI.resolve("EPS_WriteESealData");
-    EPS_ReadESealData = (PFN_EPS_ReadESealData)SKFAPI.resolve("EPS_ReadESealData");
-    EPS_Encrypt = (PFN_EPS_Encrypt)SKFAPI.resolve("EPS_Encrypt");
-    EPS_Decrypt = (PFN_EPS_Decrypt)SKFAPI.resolve("EPS_Decrypt");
-    EPS_Mac = (PFN_EPS_Mac)SKFAPI.resolve("EPS_Mac");
+    if(DLLNAME != "HNCA3000GM.dll")
+    {
+        EPS_ImportSymmKey = (PFN_EPS_ImportSymmKey)SKFAPI.resolve("EPS_ImportSymmKey");
+        EPS_WriteESealData = (PFN_EPS_WriteESealData)SKFAPI.resolve("EPS_WriteESealData");
+        EPS_ReadESealData = (PFN_EPS_ReadESealData)SKFAPI.resolve("EPS_ReadESealData");
+        EPS_Encrypt = (PFN_EPS_Encrypt)SKFAPI.resolve("EPS_Encrypt");
+        EPS_Decrypt = (PFN_EPS_Decrypt)SKFAPI.resolve("EPS_Decrypt");
+        EPS_Mac = (PFN_EPS_Mac)SKFAPI.resolve("EPS_Mac");
+    }
 }
 typeDefApi::~typeDefApi()
 {

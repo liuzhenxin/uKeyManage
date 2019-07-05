@@ -82,10 +82,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon )
 {
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN)
+    {
+        ui->tabWidget->setTabEnabled(1,false);
+    }
+    else
+    {
     // 根据应用句柄，判断容器页和印章页是否激活
     ui->tabWidget->setTabEnabled(1,(nullptr != hApp));
 //    ui->tabWidget->setTabEnabled(2,(nullptr != hApp));
-
+    }
     // 根据应用句柄，判断删除文件按钮是否激活
 //    ui->deleteButton->setEnabled(false);
 
@@ -514,7 +520,7 @@ void MainWindow::treeView_model()
             Dapi->SKF_DisConnectDev(phDev);
     }
     ui->FileTree->setModel(model);                          // 设置树状列表模型
-    ui->FileTree->header()->setDefaultSectionSize(120);     // 设置默认表头宽度
+    ui->FileTree->header()->setDefaultSectionSize(140);     // 设置默认表头宽度
     qDebug()<<"treeView_model out";
 }
 
