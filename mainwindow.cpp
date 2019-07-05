@@ -82,7 +82,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon )
 {
-    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN)
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN || ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE)
     {
         ui->tabWidget->setTabEnabled(1,false);
     }
@@ -355,8 +355,13 @@ void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
     {
         ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = LONGMAI;
     }
-    if (arg1 == "飞天") {
+    if(arg1 == "飞天")
+    {
         ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = FEITIAN;
+    }
+    if(arg1 == "亚略特")
+    {
+        ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = YALUETE;
     }
     changeDll();
 }
@@ -364,7 +369,7 @@ void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
 void MainWindow::changeDll()
 {
     ChooseKeyDialog::PIN = "";
-    initControl(phDev , nullptr , nullptr);
+    initControl(nullptr , nullptr , nullptr);
     disConnectAll(phDev,phApp,phCon);
 //    if(phDev)
 //    {
@@ -408,7 +413,6 @@ void MainWindow::treeView_model()
 
     qDebug()<<"treeView_model in";
     model->clear();
-
     model->setHorizontalHeaderLabels(QStringList()<<QStringLiteral("Usb Key Content")<<QStringLiteral("flag"));
     // 枚举设备 SKF_EnumDev(BOOL bPresent, LPSTR szNameList, ULONG *pulSize)
     char DevList[512] = {0};
@@ -417,7 +421,7 @@ void MainWindow::treeView_model()
     ULONG iRet = Dapi->SKF_EnumDev(true,DevList,&DevCount);
     if(iRet)
     {
-        QMessageBox::information(this,"设备","无可用设备",nullptr,nullptr);
+        QMessageBox::information(this,"设备","枚举设备失败，无可用设备",nullptr,nullptr);
         return;
     }
     for(int i = 0;DevList[i] != 0x00; i = i + (int)strlen(&DevList[i]) + 1)
