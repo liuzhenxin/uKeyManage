@@ -7,6 +7,7 @@
 #include <choosekeydialog.h>
 #include <utilfunction.h>
 #include <iostream>
+#include <QMessageBox>
 namespace Ui {
 class VerifyPin;
 }
@@ -32,13 +33,14 @@ private slots:
 
 private:
     Ui::VerifyPin *ui;
-    typeDefApi *vpDapi = nullptr;
+
 public:
     QString dllName = nullptr;
     QString pinCode = nullptr;
     bool isExit = false;
     bool islocked = false;
     HAPPLICATION phApp = nullptr;
+    typeDefApi *vpDapi = nullptr;
 };
 
 #endif // VERIFYPIN_H

@@ -80,6 +80,22 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QRadioButton" name="YALUETECHOOSE">
+   <property name="geometry">
+    <rect>
+     <x>170</x>
+     <y>90</y>
+     <width>91</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>亚略特</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections>

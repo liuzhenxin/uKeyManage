@@ -7,17 +7,16 @@ VerifyPin::VerifyPin(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setWindowTitle("PIN码验证");
-
 }
 
 VerifyPin::~VerifyPin()
 {
     qDebug()<<"析构pin码对话框";
-    if(vpDapi)
-    {
-        delete vpDapi;
-        vpDapi = nullptr;
-    }
+//    if(vpDapi)
+//    {
+//        delete vpDapi;
+//        vpDapi = nullptr;
+//    }
     if(phApp)
     {
         phApp = nullptr;
@@ -29,32 +28,42 @@ VerifyPin::~VerifyPin()
 
 void VerifyPin::on_inputPin_textChanged(const QString &arg1)
 {
-   pinCode = arg1;
+    pinCode = arg1;
+//    qDebug()<<"pincode:"<<pinCode<<"  arg1:"<<arg1;
 }
 
 void VerifyPin::on_okButton_clicked()
 {
-    dllName = ChooseKeyDialog::KEYNAMEFORCHOOSEDLL;
-    if(dllName == "" || dllName == nullptr)
-        dllName = HAITAI;
-    qDebug()<<"选中的dll为::"<<dllName;
-    vpDapi = new typeDefApi(dllName);
+//    dllName = ChooseKeyDialog::KEYNAMEFORCHOOSEDLL;
+//    if(dllName == "" || dllName == nullptr)
+//        dllName = HAITAI;
+//    qDebug()<<"选中的dll为::"<<dllName;
+//    vpDapi = new typeDefApi(dllName);
 
     if(!phApp || !vpDapi)
     {
         this->setWindowTitle("函数或应用句柄为空");
+        return;
     }
 
-    ChooseKeyDialog::PIN = UtilFunction::QString2CharPoint(pinCode);
+//    ChooseKeyDialog::PIN = UtilFunction::QString2CharPoint(pinCode);
+
+    ChooseKeyDialog::PIN =pinCode.toStdString();
+
     if(ChooseKeyDialog::PIN != "")
     {
         if(verifyPIN(phApp)){
             isExit = false;
             this->~VerifyPin();
+        }else{
+            this->ui->inputPin->clear();
+            ChooseKeyDialog::PIN = "";
+            QMessageBox::information(this,"PIN错误","请输入正确的PIN码",nullptr,nullptr);
         }
     }
     else {
         this->ui->inputPin->clear();
+        QMessageBox::information(this,"PIN错误","输入为空，请输入的PIN码",nullptr,nullptr);
     }
 }
 
@@ -63,6 +72,7 @@ int VerifyPin::verifyPIN(HAPPLICATION phApp)
     ULONG pulRetryCount = 4;
     int midRet;
     qDebug()<<"缓存pin::"<<QString::fromStdString(ChooseKeyDialog::PIN);
+
     midRet = vpDapi->SKF_VerifyPIN (phApp, 1, (char*)(ChooseKeyDialog::PIN).c_str(), &pulRetryCount);
 
     if(midRet == 0x0A000025)

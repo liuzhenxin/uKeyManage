@@ -82,6 +82,8 @@ private slots:
 
 private:
 
+    void initComboItem();
+
     void initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon );
 
     void disConnectAll( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon );
@@ -106,6 +108,7 @@ private:
 
     int Base64Encode(unsigned char* bin_data, int bin_size, char* base64_data, unsigned int* base64_size);
 
+    void EnumUsbInfo(std::vector<std::string> &device);
 private:
 
     Ui::MainWindow *ui = nullptr;
@@ -124,13 +127,15 @@ private:
 
     usbThread *FeiTianUsb;
 
+    usbThread *YaLueTeUsb;
+
     DEVHANDLE phDev = nullptr;
 
     HAPPLICATION phApp = nullptr;
 
     HCONTAINER phCon = nullptr;
 
-    QString curItemName = nullptr;
+//    QString curItemName = nullptr;
 
     QString pinCode = nullptr;
 

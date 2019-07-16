@@ -66,6 +66,11 @@
                   <string>飞天</string>
                  </property>
                 </item>
+                <item>
+                 <property name="text">
+                  <string>亚略特</string>
+                 </property>
+                </item>
                </widget>
               </item>
               <item>

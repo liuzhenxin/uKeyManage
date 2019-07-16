@@ -7,6 +7,7 @@
 #define HAITAI  "SKFAPI20509.dll"
 #define LONGMAI "mtoken_gm3000"
 #define FEITIAN "HNCA3000GM.dll"
+#define YALUETE "SMSKF.dll"
 
 namespace Ui {
 class ChooseKeyDialog;
@@ -32,6 +33,8 @@ private slots:
     void on_LONGMAICHOOSE_toggled(bool checked);
 
     void on_FEITIANCHOOSE_toggled(bool checked);
+
+    void on_YALUETECHOOSE_toggled(bool checked);
 
 private:
     Ui::ChooseKeyDialog *ui;

@@ -18,19 +18,20 @@ char* UtilFunction::QString2CharPoint1(QString qstring)
     return qByteArray.data();
 }
 
-const char* UtilFunction::QString2ConstCharPoint(QString qstring)
+char* UtilFunction::QString2ConstCharPoint(QString qstring)
 {
     std::string cString = qstring.toStdString();
-    return cString.c_str();
+    return (char*)cString.c_str();
 }
 
 QString UtilFunction::ReadFileRights(ULONG hex)
 {
+//    return QString::number(hex,16);
     switch (hex) {
-    case SECURE_ANYONE_ACCOUNT:return QString("0x000000FF  任何人");
-    case SECURE_USER_ACCOUNT:return QString("0x00000010  用户权限");
-    case SECURE_ADM_ACCOUNT:return QString("0x00000001  管理员权限");
-    case SECURE_NEVER_ACCOUNT:return QString("0x00000000  不允许");
-    default:return QString("UNKNOWRIGHTS");
+        case SECURE_ANYONE_ACCOUNT:return QString("0x000000FF  任何人");
+        case SECURE_USER_ACCOUNT:return QString("0x00000010  用户权限");
+        case SECURE_ADM_ACCOUNT:return QString("0x00000001  管理员权限");
+        case SECURE_NEVER_ACCOUNT:return QString("0x00000000  不允许");
+        default:return QString("UNKNOWRIGHTS");
     }
 }

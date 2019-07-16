@@ -6,11 +6,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     ui->unlockPinButton->setEnabled(false);
     initControl(nullptr,nullptr,nullptr);
-    // 起始key类型选择窗口
-    chooseKeyD = new ChooseKeyDialog(this);
-    chooseKeyD->exec();
+
     // 开启usb插拔判断线程
     //    QSharedPointer<usbThread> HaiTaiUsb = QSharedPointer<usbThread>(new usbThread(HAITAI));     // 海泰插拔key提示线程
     HaiTaiUsb = new usbThread(HAITAI);    // 龙脉插拔key提示线程
@@ -21,30 +20,49 @@ MainWindow::MainWindow(QWidget *parent) :
 
     FeiTianUsb = new usbThread(FEITIAN); // 飞天插拔key提示线程
     FeiTianUsb->start();
+
+    YaLueTeUsb = new usbThread(YALUETE); // 亚略特插拔key提示线程
+    YaLueTeUsb->start();
+
     // 切换到当前选择的dll
     changeDll();
     // 槽函数
-    //    connect(this, SIGNAL(apiTypeChooseMsg(typeDefApi*)),usb ,SLOT(apiTypeChoose(typeDefApi*)));
-    //    connect(HaiTaiUsb.data(),SIGNAL(usbMsg(int)),this,SLOT(usbMsgS(int)));
-    //    connect(LongMaiUsb.data(),SIGNAL(usbMsg(int)),this,SLOT(usbMsgS(int)));
+
     connect(HaiTaiUsb,SIGNAL(usbMsg(int)),this,SLOT(usbMsgS(int)));
     connect(LongMaiUsb,SIGNAL(usbMsg(int)),this,SLOT(usbMsgS(int)));
     connect(FeiTianUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
+    connect(YaLueTeUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
 
-    connect(this,
-            SIGNAL(deletefile(HAPPLICATION, QString)),
-            this,
-            SLOT(deleteButton(HAPPLICATION, QString)));
+    connect(this,SIGNAL(deletefile(HAPPLICATION, QString)), this,SLOT(deleteButton(HAPPLICATION, QString)));
     connect(this->ui->FileTree, SIGNAL(customContextMenuRequested(const QPoint& )), this, SLOT(ShowContextMenu(const QPoint&)));
-    //    connect(pinDailog,SIGNAL(pinMsg(QString)),this,SLOT(pinRecvS(QString)));
 
-    // 初始化comboBox
-    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == HAITAI)
-        ui->comboBox->setCurrentIndex(1);
-    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == LONGMAI)
-        ui->comboBox->setCurrentIndex(2);
-    if (ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN)
-        ui->comboBox->setCurrentIndex(3);
+
+    std::vector<std::string> device;
+    EnumUsbInfo(device);
+
+    if(device.size() > 1)
+    {
+        // 起始key类型选择窗口
+        chooseKeyD = new ChooseKeyDialog(this);
+        chooseKeyD->exec();
+    }else{
+        if(!device.empty())
+        {
+            auto item = device.begin();
+            if(*item == "5448")
+                ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = HAITAI;
+            if(*item == "096e")
+                ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = FEITIAN;
+            if(*item == "055c")
+                ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = LONGMAI;
+            if(*item == "2010")
+                ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = YALUETE;
+        }else {
+            ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = HAITAI;
+        }
+    }
+
+    initComboItem();
 }
 
 MainWindow::~MainWindow()
@@ -78,6 +96,19 @@ MainWindow::~MainWindow()
         FeiTianUsb = nullptr;
     }
     delete ui;
+}
+
+void MainWindow::initComboItem()
+{
+    // 初始化comboBox
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == HAITAI)
+        ui->comboBox->setCurrentIndex(1);
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == LONGMAI)
+        ui->comboBox->setCurrentIndex(2);
+    if (ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN)
+        ui->comboBox->setCurrentIndex(3);
+    if (ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE)
+        ui->comboBox->setCurrentIndex(4);
 }
 
 void MainWindow::initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon )
@@ -121,11 +152,11 @@ void MainWindow::initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hC
 void MainWindow::disConnectAll( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon )
 {
 
-    if(nullptr != hApp) //  关闭应用连接
-        Dapi->SKF_CloseApplication(hApp);
-
     if(nullptr != hCon) //  关闭容器连接
         Dapi->SKF_CloseContainer(hCon);
+
+    if(nullptr != hApp) //  关闭应用连接
+        Dapi->SKF_CloseApplication(hApp);
 
     if(nullptr != hDev) //  关闭设备连接
         Dapi->SKF_DisConnectDev(hDev);
@@ -241,7 +272,7 @@ ULONG MainWindow::getFileContent(HAPPLICATION hApp ,const  QModelIndex &index)
     }
     ui->TBItemInfo->setText((char*)fileBuf);
 //    ui->deleteButton->setEnabled(true);
-    curItemName = qString;
+//    curItemName = qString;
 
     return uRet;
 }
@@ -319,8 +350,11 @@ void MainWindow::deleteButton(HAPPLICATION phApp,QString curItemName)
     ui->TBItemInfo->clear();
     ui->TBItemInfo->setText(curItemName);
 
-    verifyPIN(phApp);
-    // 验PIN end
+    if(!verifyPIN(phApp))
+    {
+        QMessageBox::information(this,"文件","验证失败，文件未删除",nullptr,nullptr);
+        return;
+    }
 
     int idRet = Dapi->SKF_DeleteFile(phApp , (char*)curItemName.toStdString().c_str());
     if(idRet)
@@ -417,11 +451,10 @@ void MainWindow::treeView_model()
     // 枚举设备 SKF_EnumDev(BOOL bPresent, LPSTR szNameList, ULONG *pulSize)
     char DevList[512] = {0};
     ULONG DevCount = 512;
-    qDebug()<<"枚举设备开始";
     ULONG iRet = Dapi->SKF_EnumDev(true,DevList,&DevCount);
     if(iRet)
     {
-        QMessageBox::information(this,"设备","枚举设备失败，无可用设备",nullptr,nullptr);
+        //QMessageBox::information(this,"设备","枚举设备失败，无可用设备",nullptr,nullptr);
         return;
     }
     for(int i = 0;DevList[i] != 0x00; i = i + (int)strlen(&DevList[i]) + 1)
@@ -456,7 +489,7 @@ void MainWindow::treeView_model()
                 return;
             }
             QString tmpApp = szAppName+j;
-            qDebug()<<tmpApp;
+            qDebug()<<"应用名::"<<tmpApp;
             QList<QStandardItem*> itemIndex2;
             QStandardItem *itemIndex2_1 = new QStandardItem(tmpApp);
             QStandardItem *itemIndex2_2 = new QStandardItem(QStringLiteral("应用"));
@@ -464,6 +497,7 @@ void MainWindow::treeView_model()
             itemIndex2.append(itemIndex2_2);
             itemIndex1_1->appendRow(itemIndex2);
             // 枚举文件 加入model 显示在treeview中
+//            verifyPIN(phApp);
             char cTmpBuf[512] = {0};
             ULONG iTmpBufLen = 512;
 
@@ -473,10 +507,11 @@ void MainWindow::treeView_model()
                 qDebug()<<"枚举文件失败"<<QString::number(iRet,16);
                 return;
             }
+            qDebug()<<"枚举数据长度:"<<iTmpBufLen;
             unsigned int k = 0;
             while(cTmpBuf[k] != 0x00){
                 QString tmpFile = cTmpBuf+k;
-                qDebug()<<tmpFile;
+                qDebug()<<"枚举文件::"<<tmpFile;
                 QList<QStandardItem*> itemIndex3;
                 QStandardItem *itemIndex3_1 = new QStandardItem(tmpFile);
                 QStandardItem *itemIndex3_2 = new QStandardItem(QStringLiteral("文件"));
@@ -499,7 +534,7 @@ void MainWindow::treeView_model()
             k = 0;
             while(cTmpBufCon[k] != 0x00){
                 QString tmpCon = cTmpBufCon+k;
-                qDebug()<<tmpCon;
+                qDebug()<<"枚举容器"<<tmpCon;
                 // 写入listview
 //                ui->ContainerList->addItem(tmpCon);
 
@@ -515,13 +550,17 @@ void MainWindow::treeView_model()
             }
 
             // 所有项目加入容器 关闭应用
-            if(phApp)
+            if(phApp){
                 Dapi->SKF_CloseApplication(phApp);
+                phApp = nullptr;
+            }
         }
         qDebug()<<"枚举应用结束";
         // 关闭设备
-        if(phDev)
+        if(phDev){
             Dapi->SKF_DisConnectDev(phDev);
+            phDev = nullptr;
+        }
     }
     ui->FileTree->setModel(model);                          // 设置树状列表模型
     ui->FileTree->header()->setDefaultSectionSize(140);     // 设置默认表头宽度
@@ -530,10 +569,11 @@ void MainWindow::treeView_model()
 
 void MainWindow::usbMsgS(int type)
 {
+    initComboItem();
+    qDebug()<<ChooseKeyDialog::KEYNAMEFORCHOOSEDLL;
     if(1 == type)
     {
         QMessageBox::information(this,"usb","USBKey已插入",nullptr,nullptr);
-
     }
     if(2 == type)
     {
@@ -542,10 +582,25 @@ void MainWindow::usbMsgS(int type)
         ChooseKeyDialog::PIN = "";
     }
     treeView_model();
+    //changeDll();
 }
 
-int MainWindow::verifyPIN(HAPPLICATION phApp)
+int MainWindow::verifyPIN(HAPPLICATION hApp)
 {
+    ULONG pulRetryCount = 4;
+
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE)
+    {
+        int aratekRet = Dapi->SKF_VerifyPIN (hApp, 1, (char*)(ChooseKeyDialog::PIN).c_str(), &pulRetryCount);
+        if(aratekRet)
+        {
+            if(aratekRet == 0xa000005)
+                QMessageBox::warning(this,"pin","点击应用名以打开应用",nullptr,nullptr);
+            qDebug()<<"亚略特验指纹失败::"<<QString::number(aratekRet,16);
+            return 0;
+        }
+        return 1;
+    }
     if(pinLocked)
     {
         qDebug()<<"PIN码锁死 ，不进入验pin流程";
@@ -557,7 +612,8 @@ int MainWindow::verifyPIN(HAPPLICATION phApp)
         qDebug()<<"无缓存";
         // PIN码不合法或为空
         pinDailog = new VerifyPin(this);
-        pinDailog->phApp = phApp;
+        pinDailog->vpDapi = Dapi;
+        pinDailog->phApp = hApp;
         pinDailog->exec();
         if(pinDailog->isExit)
         {
@@ -584,7 +640,7 @@ int MainWindow::verifyPIN(HAPPLICATION phApp)
 
     qDebug()<<"有缓存::"<<QString::fromStdString(ChooseKeyDialog::PIN)<<"::phapp::"<<phApp;
     // PIN码合法
-    ULONG pulRetryCount = 4;
+
     int  midRet = Dapi->SKF_VerifyPIN (phApp, 1, (char*)(ChooseKeyDialog::PIN).c_str(), &pulRetryCount);
     if(midRet)
     {
@@ -1218,6 +1274,7 @@ void MainWindow::ShowContextMenu(const QPoint& pos)
                 return;
             }
             // 调用skf接口创建文件
+            verifyPIN(phApp);
             uRet  = Dapi->SKF_CreateFile(phApp,(char*)fileName.toStdString().c_str(),1,SECURE_ANYONE_ACCOUNT,SECURE_ANYONE_ACCOUNT);
             if(uRet)
             {
@@ -1257,7 +1314,7 @@ void MainWindow::ShowContextMenu(const QPoint& pos)
             QMessageBox::information(this,tr("文件操作"),tr("文件保存成功"),QMessageBox::Yes);
         });
         menu.addAction(QStringLiteral("删除该文件"), this,[=](){
-            emit deletefile(phApp,curItemName);
+            emit deletefile(phApp,index.data().toString());
         });
         menu.addSeparator();    //添加一个分隔线
         menu.addAction(QStringLiteral("获取文件属性"), this, [=](){
@@ -1436,5 +1493,63 @@ int MainWindow::Base64Encode(unsigned char* bin_data, int bin_size, char* base64
     return 0;
 }
 
+void MainWindow::EnumUsbInfo(std::vector<std::string> &device)
+{
+    // get all device of system
+    DWORD dwFlag = (DIGCF_ALLCLASSES | DIGCF_PRESENT);
+    HDEVINFO hDevInfo = SetupDiGetClassDevs(nullptr, nullptr, nullptr, dwFlag);
+
+    if( INVALID_HANDLE_VALUE == hDevInfo )
+    {
+        printf("Failed to get system device list");
+        return;
+    }
+
+    // to enum USB device
+    SP_DEVINFO_DATA sDevInfoData;
+    sDevInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+    std::string strText;
+    TCHAR szDIS[MAX_PATH] = {0};
+
+    // Device Identification Strings,
+    DWORD nSize = 0 ;
+
+    for(int i = 0; SetupDiEnumDeviceInfo(hDevInfo,i,&sDevInfoData); i++ )
+    {
+        nSize = 0;
+
+        if ( !SetupDiGetDeviceInstanceId(hDevInfo, &sDevInfoData, szDIS, sizeof(szDIS), &nSize) )
+        {
+            printf("get device id failed\n");
+            break;
+        }
+
+        // filter : USB\VID_XXXX&PID_XXXX\00000xxxxxxx
+
+        int iLen = WideCharToMultiByte(CP_ACP, 0,szDIS, -1, nullptr, 0, nullptr, nullptr);
+
+        char* chRtn =new char[iLen*sizeof(char)];
+
+        WideCharToMultiByte(CP_ACP, 0, szDIS, -1, chRtn, iLen, nullptr, nullptr);
+
+        QString strDIS(chRtn);
+
+        strDIS.toUpper();
+
+        if( strDIS.left( 3 ) == ("USB"))
+        {
+            QString VID = strDIS.mid(strDIS.indexOf("VID_")+4,4).remove(QChar('"'), Qt::CaseInsensitive).toLower();
+
+            qDebug()<<"device id : "<<VID<<endl;
+
+            if(VID == "5448" || VID == "096e" || VID == "055c" || VID == "2010")
+            {
+                device.push_back(VID.toStdString());
+            }
+        }
+    }
+
+    SetupDiDestroyDeviceInfoList(hDevInfo);
+}
 
 

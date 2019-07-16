@@ -57,11 +57,17 @@
            </item>
            <item>
             <widget class="QLineEdit" name="inputPin">
+             <property name="font">
+              <font>
+               <family>Agency FB</family>
+               <pointsize>6</pointsize>
+              </font>
+             </property>
              <property name="inputMethodHints">
-              <set>Qt::ImhNone</set>
+              <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText|Qt::ImhSensitiveData</set>
              </property>
              <property name="echoMode">
-              <enum>QLineEdit::Normal</enum>
+              <enum>QLineEdit::Password</enum>
              </property>
             </widget>
            </item>
