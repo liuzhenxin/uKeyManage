@@ -129,6 +129,8 @@ private:
 
     usbThread *YaLueTeUsb;
 
+    usbThread *EsHNCAUsb;
+
     DEVHANDLE phDev = nullptr;
 
     HAPPLICATION phApp = nullptr;

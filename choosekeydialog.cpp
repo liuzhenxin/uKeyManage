@@ -44,3 +44,10 @@ void ChooseKeyDialog::on_YALUETECHOOSE_toggled(bool checked)
         KEYNAMEFORCHOOSEDLL = YALUETE;
     qDebug() << "this is yaluete has be choosed ：" << KEYNAMEFORCHOOSEDLL;
 }
+
+void ChooseKeyDialog::on_ESHNCACHOOSE_toggled(bool checked)
+{
+    if (checked)
+        KEYNAMEFORCHOOSEDLL = ESHNCA;
+    qDebug() << "this is eshnca has be choosed ：" << KEYNAMEFORCHOOSEDLL;
+}

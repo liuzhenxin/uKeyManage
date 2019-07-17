@@ -72,7 +72,7 @@ typeDefApi::typeDefApi(QString DLLNAME)
     SKF_ReadFile = (PFN_SKF_ReadFile)SKFAPI.resolve("SKF_ReadFile");
     SKF_WriteFile = (PFN_SKF_WriteFile)SKFAPI.resolve("SKF_WriteFile");
 
-    if(DLLNAME != "HNCA3000GM.dll" && DLLNAME != "SMSKF.dll")
+    if(DLLNAME != "HNCA3000GM.dll" && DLLNAME != "SMSKF.dll" && DLLNAME != "EsHNXACASkfV2.dll")
     {
         EPS_ImportSymmKey = (PFN_EPS_ImportSymmKey)SKFAPI.resolve("EPS_ImportSymmKey");
         EPS_WriteESealData = (PFN_EPS_WriteESealData)SKFAPI.resolve("EPS_WriteESealData");

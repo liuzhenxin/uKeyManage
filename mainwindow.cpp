@@ -24,6 +24,9 @@ MainWindow::MainWindow(QWidget *parent) :
     YaLueTeUsb = new usbThread(YALUETE); // 亚略特插拔key提示线程
     YaLueTeUsb->start();
 
+    EsHNCAUsb = new usbThread(ESHNCA); // 亚略特插拔key提示线程
+    EsHNCAUsb->start();
+
     // 切换到当前选择的dll
     changeDll();
     // 槽函数
@@ -32,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(LongMaiUsb,SIGNAL(usbMsg(int)),this,SLOT(usbMsgS(int)));
     connect(FeiTianUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
     connect(YaLueTeUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
+    connect(EsHNCAUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
 
     connect(this,SIGNAL(deletefile(HAPPLICATION, QString)), this,SLOT(deleteButton(HAPPLICATION, QString)));
     connect(this->ui->FileTree, SIGNAL(customContextMenuRequested(const QPoint& )), this, SLOT(ShowContextMenu(const QPoint&)));
@@ -56,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
             if(*item == "055c")
                 ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = LONGMAI;
             if(*item == "2010")
+                ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = YALUETE;
+            if(*item == "1ea8")
                 ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = YALUETE;
         }else {
             ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = HAITAI;
@@ -95,6 +101,15 @@ MainWindow::~MainWindow()
     if(FeiTianUsb) {
         FeiTianUsb = nullptr;
     }
+
+    if(YaLueTeUsb) {
+        YaLueTeUsb = nullptr;
+    }
+
+    if(EsHNCAUsb) {
+        EsHNCAUsb = nullptr;
+    }
+
     delete ui;
 }
 
@@ -109,11 +124,15 @@ void MainWindow::initComboItem()
         ui->comboBox->setCurrentIndex(3);
     if (ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE)
         ui->comboBox->setCurrentIndex(4);
+    if (ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == ESHNCA)
+        ui->comboBox->setCurrentIndex(5);
 }
 
 void MainWindow::initControl( DEVHANDLE hDev , HAPPLICATION hApp , HCONTAINER hCon )
 {
-    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN || ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE)
+    if(ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == FEITIAN ||
+       ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == YALUETE ||
+       ChooseKeyDialog::KEYNAMEFORCHOOSEDLL == ESHNCA )
     {
         ui->tabWidget->setTabEnabled(1,false);
     }
@@ -396,6 +415,10 @@ void MainWindow::on_comboBox_currentTextChanged(const QString &arg1)
     if(arg1 == "亚略特")
     {
         ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = YALUETE;
+    }
+    if(arg1 == "文鼎创")
+    {
+        ChooseKeyDialog::KEYNAMEFORCHOOSEDLL = ESHNCA;
     }
     changeDll();
 }

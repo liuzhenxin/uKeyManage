@@ -8,6 +8,7 @@
 #define LONGMAI "mtoken_gm3000"
 #define FEITIAN "HNCA3000GM.dll"
 #define YALUETE "SMSKF.dll"
+#define ESHNCA  "EsHNXACASkfV2.dll"
 
 namespace Ui {
 class ChooseKeyDialog;
@@ -35,6 +36,8 @@ private slots:
     void on_FEITIANCHOOSE_toggled(bool checked);
 
     void on_YALUETECHOOSE_toggled(bool checked);
+
+    void on_ESHNCACHOOSE_toggled(bool checked);
 
 private:
     Ui::ChooseKeyDialog *ui;

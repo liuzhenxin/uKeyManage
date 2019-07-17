@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>150</y>
+     <y>160</y>
      <width>171</width>
      <height>32</height>
     </rect>
@@ -68,7 +68,7 @@
    <property name="geometry">
     <rect>
      <x>70</x>
-     <y>90</y>
+     <y>80</y>
      <width>91</width>
      <height>18</height>
     </rect>
@@ -84,13 +84,29 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>90</y>
+     <y>80</y>
      <width>91</width>
      <height>18</height>
     </rect>
    </property>
    <property name="text">
     <string>亚略特</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="ESHNCACHOOSE">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>120</y>
+     <width>91</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>文鼎创</string>
    </property>
    <property name="checked">
     <bool>false</bool>
