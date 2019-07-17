@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(EsHNCAUsb, SIGNAL(usbMsg(int)), this, SLOT(usbMsgS(int)));
 
     connect(this,SIGNAL(deletefile(HAPPLICATION, QString)), this,SLOT(deleteButton(HAPPLICATION, QString)));
+    connect(this,SIGNAL(parseseal(const QModelIndex&)), this,SLOT(parseSealFromASN1(const QModelIndex&)));
     connect(this->ui->FileTree, SIGNAL(customContextMenuRequested(const QPoint& )), this, SLOT(ShowContextMenu(const QPoint&)));
 
 
@@ -1234,6 +1235,54 @@ void MainWindow::on_MacButton_clicked()
     }
 }
 
+void MainWindow::parseSealFromASN1(const QModelIndex &index)
+{
+    ULONG uRet = 0;
+
+    // 获取设备名 并连接到设备 index.sibling(index.row(),1).data().toString()
+    std::string sTmpStr = index.parent().parent().data().toString().toStdString();
+    char *cTmpStr = (char*)sTmpStr.c_str();
+    connectDev(cTmpStr);
+
+    // 获取应用名 并连接到应用
+    std::string sTmpStrSub = index.parent().data().toString().toStdString();
+    uRet = Dapi->SKF_OpenApplication(phDev, (char*)sTmpStrSub.c_str(), &phApp);
+    if(uRet)
+    {
+        qDebug()<<"打开应用出错::"<<QString::number(uRet,16);
+        return;
+    }
+    if(!verifyPIN(phApp))
+        return;
+
+    qDebug()<<"文件名::"<<index.data().toString();
+    FILEATTRIBUTE pFileInfo;
+    ZeroMemory(&pFileInfo, sizeof(pFileInfo));
+
+    QString qString = index.data().toString();
+    std::string cString = qString.toStdString();
+    uRet = Dapi->SKF_GetFileInfo(phApp, (char*)cString.c_str(), &pFileInfo);
+    if(uRet){
+        //获取文件属性失败
+        qDebug()<<"获取文件属性错误::"<<QString::number(uRet,16);
+    }
+    BYTE fileBuf[4096*20];
+    memset(fileBuf,0,4096*20);
+    ULONG iReadLen = 4096*20;
+    uRet = Dapi->SKF_ReadFile (phApp,(char*)cString.c_str(), 0, pFileInfo.FileSize, fileBuf, &iReadLen);
+    if(uRet){
+        //读失败
+        qDebug()<<"读取文件错误::"<<QString::number(uRet,16);
+    }
+
+    BYTE* sealBuf = (unsigned char*)malloc(sizeof(fileBuf));
+    sealBuf = fileBuf+1;
+    CParseSeal mSealInfo(sealBuf,iReadLen);
+
+    ui->TBItemInfo->setText(mSealInfo.getFormateSealInfo());
+
+}
+
 void MainWindow::ShowContextMenu(const QPoint& pos)
 {
     // 创建右键菜单
@@ -1338,6 +1387,12 @@ void MainWindow::ShowContextMenu(const QPoint& pos)
         });
         menu.addAction(QStringLiteral("删除该文件"), this,[=](){
             emit deletefile(phApp,index.data().toString());
+        });
+
+//        menu.addAction(QStringLiteral("以印章格式查看"), this,SLOT(parseSealFromASN1(const QModelIndex &index)));
+        menu.addAction(QStringLiteral("以印章格式查看"), this,[=](){
+//            CParseSeal mSealInfo((unsigned char*)"123456",6);
+            emit parseseal(index);
         });
         menu.addSeparator();    //添加一个分隔线
         menu.addAction(QStringLiteral("获取文件属性"), this, [=](){

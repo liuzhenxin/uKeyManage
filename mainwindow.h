@@ -21,6 +21,7 @@
 #include <QMenu>
 #include <dialogforcreatefile.h>
 #include <certparse.h>
+#include <cparseseal.h>
 namespace Ui {
 class MainWindow;
 }
@@ -35,10 +36,10 @@ public:
     ~MainWindow();
 
 signals:
-//    void treeViewItemInfo(char*);
+
     void deletefile( HAPPLICATION phApp,QString curItemName);
 
-//    void apiTypeChooseMsg(typeDefApi*);
+    void parseseal(const QModelIndex &index);
 
 private slots:
     void usbMsgS(int);
@@ -79,7 +80,7 @@ private slots:
 
     void on_TEXT2SM4Button_clicked();
 
-
+    void parseSealFromASN1(const QModelIndex &index);
 private:
 
     void initComboItem();

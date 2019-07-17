@@ -28,6 +28,7 @@ SOURCES += \
         SM4.cpp \
         certparse.cpp \
         choosekeydialog.cpp \
+        cparseseal.cpp \
         dialogforcreatefile.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -37,9 +38,14 @@ SOURCES += \
         verifypin.cpp
 
 HEADERS += \
+        B_SESealASN1.h \
+        OFD_SESealASN1.h \
+        OFD_ZWFWSESealASN1.h \
+        SESealASN1.h \
         SM4.h \
         certparse.h \
         choosekeydialog.h \
+        cparseseal.h \
         dialogforcreatefile.h \
         mainwindow.h \
         typedefine.h \
